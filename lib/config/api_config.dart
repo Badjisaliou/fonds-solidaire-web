@@ -1,3 +1,3 @@
 class ApiConfig {
-  static const String baseUrl = "http://fonds-solidaire-web.onrender.com/api";
+  static const String baseUrl = "http://fonds-solidaire-api.onrender.com/api";
 }
