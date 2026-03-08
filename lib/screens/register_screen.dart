@@ -58,6 +58,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Erreur lors de l'inscription")),
       );
+
+      print("Erreur inscription: $e");
     }
 
     setState(() {
