@@ -35,6 +35,9 @@ class AuthService {
       body: jsonEncode({"name": name, "email": email, "password": password}),
     );
 
+    print(response.statusCode);
+    print(response.body);
+
     if (response.statusCode == 201 || response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
