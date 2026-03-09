@@ -6,13 +6,20 @@ import '../config/api_config.dart';
 class UserService {
   static Future<Map<String, dynamic>> getUser() async {
     final prefs = await SharedPreferences.getInstance();
-    String? token = prefs.getString("token");
+    final token = prefs.getString("token");
 
     final response = await http.get(
       Uri.parse("${ApiConfig.baseUrl}/user"),
-      headers: {"Authorization": "Bearer $token", "Accept": "application/json"},
+      headers: {
+        "Authorization": "Bearer $token",
+        "Accept": "application/json",
+      },
     );
 
-    return jsonDecode(response.body);
+    if (response.statusCode != 200) {
+      throw Exception("Erreur profil utilisateur: ${response.body}");
+    }
+
+    return jsonDecode(response.body) as Map<String, dynamic>;
   }
 }

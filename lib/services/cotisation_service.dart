@@ -7,39 +7,39 @@ import '../config/api_config.dart';
 class CotisationService {
   static Future<List<dynamic>> getCotisations({int? month}) async {
     final prefs = await SharedPreferences.getInstance();
-    String? token = prefs.getString("token");
+    final token = prefs.getString("token");
 
     String url = "${ApiConfig.baseUrl}/cotisations";
-
     if (month != null) {
       url += "?month=$month";
     }
 
     final response = await http.get(
       Uri.parse(url),
-
-      headers: {"Authorization": "Bearer $token", "Accept": "application/json"},
+      headers: {
+        "Authorization": "Bearer $token",
+        "Accept": "application/json",
+      },
     );
 
-    if (response.statusCode == 200) {
-      var data = jsonDecode(response.body);
-
-      return data["data"];
-    } else {
-      throw Exception("Erreur API cotisations");
+    if (response.statusCode != 200) {
+      throw Exception("Erreur API cotisations: ${response.body}");
     }
+
+    final data = jsonDecode(response.body);
+    return data["data"] ?? [];
   }
 
-  static Future addCotisation(
+  static Future<void> addCotisation(
     String montant,
     String description,
     Uint8List fileBytes,
     String fileName,
   ) async {
     final prefs = await SharedPreferences.getInstance();
-    String? token = prefs.getString("token");
+    final token = prefs.getString("token");
 
-    var request = http.MultipartRequest(
+    final request = http.MultipartRequest(
       "POST",
       Uri.parse("${ApiConfig.baseUrl}/cotisations"),
     );
@@ -49,7 +49,7 @@ class CotisationService {
 
     request.fields["montant"] = montant;
     request.fields["description"] = description;
-    request.fields["date_cotisation"] = DateTime.now().toString();
+    request.fields["date_cotisation"] = DateTime.now().toIso8601String().split("T").first;
 
     request.files.add(
       http.MultipartFile.fromBytes(
@@ -59,31 +59,30 @@ class CotisationService {
       ),
     );
 
-    var response = await request.send();
-
+    final response = await request.send();
     if (response.statusCode != 201) {
-      throw Exception("Erreur création cotisation");
+      final body = await response.stream.bytesToString();
+      throw Exception("Erreur creation cotisation: $body");
     }
-
-    return response;
   }
 
   static Future<int> getTotalUser() async {
     final prefs = await SharedPreferences.getInstance();
-    String? token = prefs.getString("token");
+    final token = prefs.getString("token");
 
     final response = await http.get(
       Uri.parse("${ApiConfig.baseUrl}/cotisations/total-user"),
-
-      headers: {"Authorization": "Bearer $token", "Accept": "application/json"},
+      headers: {
+        "Authorization": "Bearer $token",
+        "Accept": "application/json",
+      },
     );
 
-    if (response.statusCode == 200) {
-      var data = jsonDecode(response.body);
-
-      return int.tryParse(data["total"].toString()) ?? 0;
-    } else {
-      throw Exception("Erreur récupération total");
+    if (response.statusCode != 200) {
+      throw Exception("Erreur recuperation total: ${response.body}");
     }
+
+    final data = jsonDecode(response.body);
+    return int.tryParse(data["total"].toString()) ?? 0;
   }
 }

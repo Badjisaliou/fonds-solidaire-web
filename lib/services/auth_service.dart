@@ -18,30 +18,43 @@ class AuthService {
 
     if (response.statusCode != 200) {
       throw Exception("Failed to login: ${response.body}");
-    } else {
-      return jsonDecode(response.body);
     }
+
+    return jsonDecode(response.body);
   }
 
-  static Future register(String name, String email, String password) async {
+  static Future<Map<String, dynamic>> register(
+    String name,
+    String email,
+    String password,
+  ) async {
     final response = await http.post(
       Uri.parse("${ApiConfig.baseUrl}/register"),
-
       headers: {
         "Accept": "application/json",
         "Content-Type": "application/json",
       },
-
       body: jsonEncode({"name": name, "email": email, "password": password}),
     );
 
-    print(response.statusCode);
-    print(response.body);
-
     if (response.statusCode == 201 || response.statusCode == 200) {
       return jsonDecode(response.body);
-    } else {
-      throw Exception("Erreur inscription");
+    }
+
+    throw Exception("Register failed: ${response.body}");
+  }
+
+  static Future<void> logout(String token) async {
+    final response = await http.post(
+      Uri.parse("${ApiConfig.baseUrl}/logout"),
+      headers: {
+        "Authorization": "Bearer $token",
+        "Accept": "application/json",
+      },
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception("Logout failed: ${response.body}");
     }
   }
 }

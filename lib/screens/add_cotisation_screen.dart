@@ -22,9 +22,8 @@ class _AddCotisationScreenState extends State<AddCotisationScreen> {
 
   bool loading = false;
 
-  /// SELECTION FICHIER
   void pickFile() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles(
+    final result = await FilePicker.platform.pickFiles(
       type: FileType.custom,
       allowedExtensions: ['jpg', 'jpeg', 'png', 'pdf'],
       withData: true,
@@ -38,21 +37,26 @@ class _AddCotisationScreenState extends State<AddCotisationScreen> {
     }
   }
 
-  /// ENREGISTREMENT
   void saveCotisation() async {
     if (montantController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Veuillez saisir un montant")),
       );
+      return;
+    }
 
+    final montant = int.tryParse(montantController.text.trim());
+    if (montant == null || montant < 5000) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Le montant minimum est 5000")),
+      );
       return;
     }
 
     if (fileBytes == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Veuillez sélectionner un justificatif")),
+        const SnackBar(content: Text("Veuillez selectionner un justificatif")),
       );
-
       return;
     }
 
@@ -60,20 +64,27 @@ class _AddCotisationScreenState extends State<AddCotisationScreen> {
       loading = true;
     });
 
-    await CotisationService.addCotisation(
-      montantController.text,
-      descriptionController.text,
-      fileBytes!,
-      fileName!,
-    );
+    try {
+      await CotisationService.addCotisation(
+        montantController.text,
+        descriptionController.text,
+        fileBytes!,
+        fileName!,
+      );
 
-    if (!mounted) return;
-
-    setState(() {
-      loading = false;
-    });
-
-    Navigator.pop(context);
+      if (!mounted) return;
+      Navigator.pop(context);
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Erreur lors de l'enregistrement: $e")),
+      );
+    } finally {
+      if (!mounted) return;
+      setState(() {
+        loading = false;
+      });
+    }
   }
 
   @override
@@ -83,9 +94,7 @@ class _AddCotisationScreenState extends State<AddCotisationScreen> {
         title: Row(
           children: [
             Image.asset("assets/images/logo.png", height: 28),
-
             const SizedBox(width: 10),
-
             const Text(
               "Ajouter une cotisation",
               style: TextStyle(fontWeight: FontWeight.bold),
@@ -93,19 +102,14 @@ class _AddCotisationScreenState extends State<AddCotisationScreen> {
           ],
         ),
       ),
-
       body: AppBackground(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
-
           child: Container(
             padding: const EdgeInsets.all(22),
-
             decoration: BoxDecoration(
               color: Colors.white,
-
               borderRadius: BorderRadius.circular(18),
-
               boxShadow: [
                 BoxShadow(
                   color: Colors.black.withValues(alpha: 0.06),
@@ -114,12 +118,9 @@ class _AddCotisationScreenState extends State<AddCotisationScreen> {
                 ),
               ],
             ),
-
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
-
               children: [
-                /// TITRE
                 const Text(
                   "Nouvelle cotisation",
                   style: TextStyle(
@@ -128,78 +129,56 @@ class _AddCotisationScreenState extends State<AddCotisationScreen> {
                     color: Color(0xFF1E3A5F),
                   ),
                 ),
-
                 const SizedBox(height: 20),
-
-                /// MONTANT
                 TextField(
                   controller: montantController,
                   keyboardType: TextInputType.number,
-
                   decoration: InputDecoration(
                     labelText: "Montant",
-
                     prefixIcon: const Icon(
                       Icons.payments,
                       color: Color(0xFF1E3A5F),
                     ),
-
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 20),
-
-                /// DESCRIPTION
                 TextField(
                   controller: descriptionController,
-
                   decoration: InputDecoration(
                     labelText: "Description",
-
                     prefixIcon: const Icon(
                       Icons.description,
                       color: Color(0xFF1E3A5F),
                     ),
-
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 20),
-
-                /// BOUTON CHOISIR FICHIER
                 CustomButton(
                   text: "Choisir justificatif",
                   icon: Icons.attach_file,
                   onPressed: pickFile,
                 ),
-
                 const SizedBox(height: 15),
-
-                /// FICHIER SELECTIONNE
                 if (fileName != null)
                   Container(
                     padding: const EdgeInsets.all(12),
-
                     decoration: BoxDecoration(
                       color: const Color(0xFF1E3A5F).withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(10),
                     ),
-
                     child: Row(
                       children: [
                         const Icon(
                           Icons.insert_drive_file,
                           color: Color(0xFF1E3A5F),
                         ),
-
                         const SizedBox(width: 10),
-
                         Expanded(
                           child: Text(
                             fileName!,
@@ -209,10 +188,7 @@ class _AddCotisationScreenState extends State<AddCotisationScreen> {
                       ],
                     ),
                   ),
-
                 const SizedBox(height: 30),
-
-                /// ENREGISTRER
                 loading
                     ? const Center(child: CircularProgressIndicator())
                     : CustomButton(
